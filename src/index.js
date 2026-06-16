@@ -5,6 +5,10 @@ import {
   createEastAsiaInboxItem,
   parseEastAsiaCommand
 } from "./east-asia-inbox.js";
+import {
+  parseProcessCommand,
+  processEastAsiaInboxItem
+} from "./east-asia-processor.js";
 import { handleTextCommand } from "./commands.js";
 import { createNotionNote, parseNoteCommand } from "./notion-notes.js";
 import { createAiReply } from "./openai-agent.js";
@@ -67,6 +71,11 @@ async function handleLineEvent(event) {
 }
 
 async function createReplyText(text) {
+  const processKeyword = parseProcessCommand(text);
+  if (processKeyword !== null) {
+    return processEastAsiaInboxItem(processKeyword);
+  }
+
   const eastAsiaContent = parseEastAsiaCommand(text);
   if (eastAsiaContent !== null) {
     return createEastAsiaInboxItem(eastAsiaContent);

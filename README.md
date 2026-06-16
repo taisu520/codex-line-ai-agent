@@ -1,11 +1,25 @@
 # LINE Bot AI Agent MVP
 
 這是一個最小可用版本的 LINE Bot 遠端控制台。  
-目前只處理 LINE 的文字訊息。v0.5 新增東亞樹 Inbox：固定指令會走內建回覆，`/ea` 會寫入東亞樹 Inbox，`/note` 會寫入一般 Notion Inbox，一般自然語言訊息會交給 AI 回覆。
+目前只處理 LINE 的文字訊息。v0.5.1 新增東亞樹 Inbox 處理指令：固定指令會走內建回覆，`/process` 會把東亞樹 Inbox 資料送到對應待整理資料庫，`/ea` 會寫入東亞樹 Inbox，`/note` 會寫入一般 Notion Inbox，一般自然語言訊息會交給 AI 回覆。
 
 Google Calendar 目前仍是測試指令，不會真的寫入外部服務。
 
 ## 版本狀態
+
+### v0.5.1
+
+- 新增 `/process 關鍵字` 指令。
+- 搜尋東亞樹 Inbox 中 `Name` 包含關鍵字且 `Processed=false` 的資料。
+- 找到多筆時不處理，要求使用更精確的關鍵字。
+- 依 `Target` 寫入對應待整理資料庫：
+  - `人物待整理`
+  - `思想待整理`
+  - `作品待整理`
+  - `歷史待整理`
+- 寫入成功後更新原 Inbox：
+  - `Processed=true`
+  - `Status=Done`
 
 ### v0.5
 
@@ -63,6 +77,7 @@ AI 回覆暫時失敗，請稍後再試。
 - 只處理文字訊息
 - 使用 `.env` 管理 LINE 與 OpenAI 金鑰
 - 非固定指令會送到 OpenAI API 產生回覆
+- `/process 關鍵字` 會處理東亞樹 Inbox 資料
 - `/ea 內容` 會寫入東亞樹 Inbox
 - `/note 內容` 會寫入 Notion database，並自動寫入 `Category`
 - 可部署到 Render
@@ -75,6 +90,7 @@ AI 回覆暫時失敗，請稍後再試。
 /讀書 今天
 /notion 測試
 /calendar 測試
+/process 關鍵字
 /ea 內容
 /note 內容
 ```
@@ -86,8 +102,36 @@ AI 回覆暫時失敗，請稍後再試。
 - `/讀書 今天`：回覆今天讀書計畫
 - `/notion 測試`：回覆 `Notion 串接待完成`
 - `/calendar 測試`：回覆 `Google Calendar 串接待完成`
+- `/process 關鍵字`：處理東亞樹 Inbox 資料
 - `/ea 內容`：把內容新增到東亞樹 Inbox
 - `/note 內容`：把內容新增到 Notion
+
+東亞樹 Inbox 處理範例：
+
+```text
+/process 牟宗三
+```
+
+成功時會回覆：
+
+```text
+已處理東亞樹 Inbox：
+
+Target：思想待整理
+標題：牟宗三與康德比較
+```
+
+如果找到多筆，會回覆：
+
+```text
+找到多筆符合資料，請使用更精確的關鍵字
+```
+
+如果找不到，會回覆：
+
+```text
+找不到符合條件的東亞樹 Inbox 資料
+```
 
 東亞樹 Inbox 範例：
 
@@ -152,12 +196,16 @@ OPENAI_MODEL=gpt-4.1-mini
 NOTION_TOKEN=你的 Notion Integration Token
 NOTION_DATABASE_ID=你的 Notion Database ID
 NOTION_EA_INBOX_DATABASE_ID=你的東亞樹 Inbox Database ID
+NOTION_EA_PEOPLE_STAGING_DATABASE_ID=你的東亞樹人物待整理 Database ID
+NOTION_EA_THOUGHT_STAGING_DATABASE_ID=你的東亞樹思想待整理 Database ID
+NOTION_EA_WORK_STAGING_DATABASE_ID=你的東亞樹作品待整理 Database ID
+NOTION_EA_HISTORY_STAGING_DATABASE_ID=你的東亞樹歷史待整理 Database ID
 PORT=3000
 ```
 
 `OPENAI_MODEL` 可以先保留預設值。之後如果要更換模型，只要調整環境變數，不一定要改程式。
 
-v0.5 需要新增 `NOTION_EA_INBOX_DATABASE_ID`，用來指定東亞樹 Inbox。
+v0.5.1 需要新增四個待整理資料庫 ID，用來讓 `/process` 依照 `Target` 分流。
 
 4. 啟動
 
@@ -212,6 +260,10 @@ OPENAI_API_KEY
 NOTION_TOKEN
 NOTION_DATABASE_ID
 NOTION_EA_INBOX_DATABASE_ID
+NOTION_EA_PEOPLE_STAGING_DATABASE_ID
+NOTION_EA_THOUGHT_STAGING_DATABASE_ID
+NOTION_EA_WORK_STAGING_DATABASE_ID
+NOTION_EA_HISTORY_STAGING_DATABASE_ID
 ```
 
 `LINE_CHANNEL_SECRET` 和 `LINE_CHANNEL_ACCESS_TOKEN` 要從 LINE Developers Console 複製。  
@@ -219,6 +271,7 @@ NOTION_EA_INBOX_DATABASE_ID
 `NOTION_TOKEN` 要從 Notion integration 取得。
 `NOTION_DATABASE_ID` 是要寫入的 Notion database ID。
 `NOTION_EA_INBOX_DATABASE_ID` 是東亞樹 Inbox database ID。
+四個 `NOTION_EA_*_STAGING_DATABASE_ID` 是東亞樹待整理資料庫 ID。
 
 ### 4. 設定 LINE webhook URL
 
@@ -293,6 +346,49 @@ Content    今天開始整理牟宗三與康德的比較
 Processed  false
 ```
 
+測試 v0.5.1 東亞樹 Inbox 處理：
+
+先在東亞樹 Inbox 準備一筆資料：
+
+```text
+Name       牟宗三與康德比較
+Content    牟宗三與康德都在處理人如何接近普遍價值的問題
+Processed  false
+Target     思想待整理
+Status     Ready
+```
+
+在 LINE 傳送：
+
+```text
+/process 牟宗三
+```
+
+預期 LINE 回覆：
+
+```text
+已處理東亞樹 Inbox：
+
+Target：思想待整理
+標題：牟宗三與康德比較
+```
+
+到 `思想待整理` 資料庫確認新增：
+
+```text
+Name           牟宗三與康德比較
+Content        牟宗三與康德都在處理人如何接近普遍價值的問題
+Source         East Asia Inbox
+Inbox Page ID  原 Inbox page id
+```
+
+原 Inbox 應更新：
+
+```text
+Processed  true
+Status     Done
+```
+
 測試 v0.4 自動分類：
 
 ```text
@@ -336,13 +432,14 @@ Processed  false
 └── src
     ├── commands.js
     ├── east-asia-inbox.js
+    ├── east-asia-processor.js
     ├── note-classifier.js
     ├── notion-notes.js
     ├── openai-agent.js
     └── index.js
 ```
 
-## 更新到 v0.5 後要執行的指令
+## 更新到 v0.5.1 後要執行的指令
 
 安裝套件：
 
@@ -373,7 +470,7 @@ npm run dev
 ```bash
 git status
 git add .
-git commit -m "Add East Asia inbox command"
+git commit -m "Add East Asia inbox processor"
 git push origin main
 ```
 

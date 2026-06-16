@@ -18,3 +18,11 @@ services:
         sync: false
       - key: NOTION_EA_INBOX_DATABASE_ID
         sync: false
+      - key: NOTION_EA_PEOPLE_STAGING_DATABASE_ID
+        sync: false
+      - key: NOTION_EA_THOUGHT_STAGING_DATABASE_ID
+        sync: false
+      - key: NOTION_EA_WORK_STAGING_DATABASE_ID
+        sync: false
+      - key: NOTION_EA_HISTORY_STAGING_DATABASE_ID
+        sync: false
