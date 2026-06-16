@@ -3,6 +3,7 @@ const HELP_TEXT = [
   "/help：列出可用指令",
   "/ping：回覆 pong",
   "/讀書 今天：回覆今天讀書計畫",
+  "/ea 內容：把內容新增到東亞樹 Inbox",
   "/note 內容：把內容新增到 Notion",
   "/notion 測試：測試 Notion 串接狀態",
   "/calendar 測試：測試 Google Calendar 串接狀態"

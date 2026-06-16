@@ -1,11 +1,21 @@
 # LINE Bot AI Agent MVP
 
 這是一個最小可用版本的 LINE Bot 遠端控制台。  
-目前只處理 LINE 的文字訊息。v0.4 已接上 Notion 筆記自動分類：固定指令會走內建回覆，`/note` 會寫入 Notion Inbox，一般自然語言訊息會交給 AI 回覆。
+目前只處理 LINE 的文字訊息。v0.5 新增東亞樹 Inbox：固定指令會走內建回覆，`/ea` 會寫入東亞樹 Inbox，`/note` 會寫入一般 Notion Inbox，一般自然語言訊息會交給 AI 回覆。
 
 Google Calendar 目前仍是測試指令，不會真的寫入外部服務。
 
 ## 版本狀態
+
+### v0.5
+
+- 新增 `/ea 內容` 指令。
+- `/ea` 只寫入東亞樹 Inbox，不會直接寫入人物樹、思想樹、作品樹、歷史樹。
+- 東亞樹 Inbox 欄位對應：
+  - `Name`：內容前 30 字
+  - `Content`：完整內容
+  - `Processed`：`false`
+- 保留 `/note` 自動分類與一般 AI 對話。
 
 ### v0.4
 
@@ -53,6 +63,7 @@ AI 回覆暫時失敗，請稍後再試。
 - 只處理文字訊息
 - 使用 `.env` 管理 LINE 與 OpenAI 金鑰
 - 非固定指令會送到 OpenAI API 產生回覆
+- `/ea 內容` 會寫入東亞樹 Inbox
 - `/note 內容` 會寫入 Notion database，並自動寫入 `Category`
 - 可部署到 Render
 
@@ -64,6 +75,7 @@ AI 回覆暫時失敗，請稍後再試。
 /讀書 今天
 /notion 測試
 /calendar 測試
+/ea 內容
 /note 內容
 ```
 
@@ -74,7 +86,27 @@ AI 回覆暫時失敗，請稍後再試。
 - `/讀書 今天`：回覆今天讀書計畫
 - `/notion 測試`：回覆 `Notion 串接待完成`
 - `/calendar 測試`：回覆 `Google Calendar 串接待完成`
+- `/ea 內容`：把內容新增到東亞樹 Inbox
 - `/note 內容`：把內容新增到 Notion
+
+東亞樹 Inbox 範例：
+
+```text
+/ea 今天開始整理牟宗三與康德的比較
+```
+
+成功時會回覆：
+
+```text
+已新增到東亞樹 Inbox：
+今天開始整理牟宗三與康德的比較
+```
+
+如果東亞樹 Inbox 寫入失敗，會回覆：
+
+```text
+東亞樹 Inbox 寫入失敗
+```
 
 Notion 筆記範例：
 
@@ -119,12 +151,13 @@ OPENAI_API_KEY=你的 OpenAI API Key
 OPENAI_MODEL=gpt-4.1-mini
 NOTION_TOKEN=你的 Notion Integration Token
 NOTION_DATABASE_ID=你的 Notion Database ID
+NOTION_EA_INBOX_DATABASE_ID=你的東亞樹 Inbox Database ID
 PORT=3000
 ```
 
 `OPENAI_MODEL` 可以先保留預設值。之後如果要更換模型，只要調整環境變數，不一定要改程式。
 
-v0.4 不需要新增環境變數。分類功能會使用既有的 `OPENAI_API_KEY` 和 `OPENAI_MODEL`。
+v0.5 需要新增 `NOTION_EA_INBOX_DATABASE_ID`，用來指定東亞樹 Inbox。
 
 4. 啟動
 
@@ -178,12 +211,14 @@ LINE_CHANNEL_ACCESS_TOKEN
 OPENAI_API_KEY
 NOTION_TOKEN
 NOTION_DATABASE_ID
+NOTION_EA_INBOX_DATABASE_ID
 ```
 
 `LINE_CHANNEL_SECRET` 和 `LINE_CHANNEL_ACCESS_TOKEN` 要從 LINE Developers Console 複製。  
 `OPENAI_API_KEY` 要從 OpenAI API keys 頁面建立並複製。
 `NOTION_TOKEN` 要從 Notion integration 取得。
 `NOTION_DATABASE_ID` 是要寫入的 Notion database ID。
+`NOTION_EA_INBOX_DATABASE_ID` 是東亞樹 Inbox database ID。
 
 ### 4. 設定 LINE webhook URL
 
@@ -237,6 +272,27 @@ pong
 
 如果 Bot 回覆 `已新增到 Notion：`、分類和標題，代表 Notion integration 已經運作。
 
+測試 v0.5 東亞樹 Inbox：
+
+```text
+/ea 今天開始整理牟宗三與康德的比較
+```
+
+預期 LINE 回覆：
+
+```text
+已新增到東亞樹 Inbox：
+今天開始整理牟宗三與康德的比較
+```
+
+到東亞樹 Inbox 確認：
+
+```text
+Name       今天開始整理牟宗三與康德的比較
+Content    今天開始整理牟宗三與康德的比較
+Processed  false
+```
+
 測試 v0.4 自動分類：
 
 ```text
@@ -279,13 +335,14 @@ pong
 ├── .env.example
 └── src
     ├── commands.js
+    ├── east-asia-inbox.js
     ├── note-classifier.js
     ├── notion-notes.js
     ├── openai-agent.js
     └── index.js
 ```
 
-## 更新到 v0.4 後要執行的指令
+## 更新到 v0.5 後要執行的指令
 
 安裝套件：
 
@@ -316,7 +373,7 @@ npm run dev
 ```bash
 git status
 git add .
-git commit -m "Add note category classification"
+git commit -m "Add East Asia inbox command"
 git push origin main
 ```
 

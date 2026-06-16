@@ -1,13 +1,13 @@
 {
   "name": "line-bot-ai-agent",
-  "version": "0.4.0",
-  "description": "LINE Bot AI Agent with OpenAI chat replies and classified Notion notes.",
+  "version": "0.5.0",
+  "description": "LINE Bot AI Agent with East Asia Inbox, OpenAI chat replies, and classified Notion notes.",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "check": "node --check src/index.js && node --check src/commands.js && node --check src/openai-agent.js && node --check src/note-classifier.js && node --check src/notion-notes.js"
+    "check": "node --check src/index.js && node --check src/commands.js && node --check src/east-asia-inbox.js && node --check src/openai-agent.js && node --check src/note-classifier.js && node --check src/notion-notes.js"
   },
   "engines": {
     "node": ">=20"

@@ -1,6 +1,10 @@
 import crypto from "node:crypto";
 import "dotenv/config";
 import express from "express";
+import {
+  createEastAsiaInboxItem,
+  parseEastAsiaCommand
+} from "./east-asia-inbox.js";
 import { handleTextCommand } from "./commands.js";
 import { createNotionNote, parseNoteCommand } from "./notion-notes.js";
 import { createAiReply } from "./openai-agent.js";
@@ -63,6 +67,11 @@ async function handleLineEvent(event) {
 }
 
 async function createReplyText(text) {
+  const eastAsiaContent = parseEastAsiaCommand(text);
+  if (eastAsiaContent !== null) {
+    return createEastAsiaInboxItem(eastAsiaContent);
+  }
+
   const noteContent = parseNoteCommand(text);
   if (noteContent !== null) {
     return createNotionNote(noteContent);

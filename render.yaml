@@ -16,3 +16,5 @@ services:
         sync: false
       - key: NOTION_DATABASE_ID
         sync: false
+      - key: NOTION_EA_INBOX_DATABASE_ID
+        sync: false
