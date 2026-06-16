@@ -1,0 +1,19 @@
+{
+  "name": "line-bot-ai-agent",
+  "version": "0.1.0",
+  "description": "LINE Bot AI Agent MVP using Node.js and Express.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "check": "node --check src/index.js && node --check src/commands.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
