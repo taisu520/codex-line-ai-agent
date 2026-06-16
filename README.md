@@ -1,11 +1,21 @@
 # LINE Bot AI Agent MVP
 
 這是一個最小可用版本的 LINE Bot 遠端控制台。  
-目前只處理 LINE 的文字訊息。v0.2 已接上 OpenAI API：固定指令會走內建回覆，一般自然語言訊息會交給 AI 回覆。
+目前只處理 LINE 的文字訊息。v0.3 已接上 Notion：固定指令會走內建回覆，`/note` 會寫入 Notion，一般自然語言訊息會交給 AI 回覆。
 
-Notion 與 Google Calendar 目前仍是測試指令，不會真的寫入外部服務。
+Google Calendar 目前仍是測試指令，不會真的寫入外部服務。
 
 ## 版本狀態
+
+### v0.3
+
+- 保留 v0.2 的 OpenAI 一般聊天功能。
+- 新增 `/note 內容` 指令。
+- `/note` 會建立一筆 Notion database page。
+- Notion 欄位對應：
+  - `Name`：內容前 30 字
+  - `Content`：完整內容
+  - `Source`：`LINE`
 
 ### v0.2
 
@@ -32,6 +42,7 @@ AI 回覆暫時失敗，請稍後再試。
 - 只處理文字訊息
 - 使用 `.env` 管理 LINE 與 OpenAI 金鑰
 - 非固定指令會送到 OpenAI API 產生回覆
+- `/note 內容` 會寫入 Notion database
 - 可部署到 Render
 
 ## 可用指令
@@ -42,6 +53,7 @@ AI 回覆暫時失敗，請稍後再試。
 /讀書 今天
 /notion 測試
 /calendar 測試
+/note 內容
 ```
 
 回覆內容：
@@ -51,6 +63,26 @@ AI 回覆暫時失敗，請稍後再試。
 - `/讀書 今天`：回覆今天讀書計畫
 - `/notion 測試`：回覆 `Notion 串接待完成`
 - `/calendar 測試`：回覆 `Google Calendar 串接待完成`
+- `/note 內容`：把內容新增到 Notion
+
+Notion 筆記範例：
+
+```text
+/note 牟宗三與康德：智的直覺是在回答人是否能接近絕對價值
+```
+
+成功時會回覆：
+
+```text
+已新增到 Notion：
+牟宗三與康德：智的直覺是在回答人是否能接近絕對價值
+```
+
+如果 Notion 寫入失敗，會回覆：
+
+```text
+Notion 寫入失敗
+```
 
 ## 本機設定
 
@@ -73,6 +105,8 @@ LINE_CHANNEL_SECRET=你的 LINE Channel Secret
 LINE_CHANNEL_ACCESS_TOKEN=你的 LINE Channel Access Token
 OPENAI_API_KEY=你的 OpenAI API Key
 OPENAI_MODEL=gpt-4.1-mini
+NOTION_TOKEN=你的 Notion Integration Token
+NOTION_DATABASE_ID=你的 Notion Database ID
 PORT=3000
 ```
 
@@ -128,10 +162,14 @@ Start Command: npm start
 LINE_CHANNEL_SECRET
 LINE_CHANNEL_ACCESS_TOKEN
 OPENAI_API_KEY
+NOTION_TOKEN
+NOTION_DATABASE_ID
 ```
 
 `LINE_CHANNEL_SECRET` 和 `LINE_CHANNEL_ACCESS_TOKEN` 要從 LINE Developers Console 複製。  
 `OPENAI_API_KEY` 要從 OpenAI API keys 頁面建立並複製。
+`NOTION_TOKEN` 要從 Notion integration 取得。
+`NOTION_DATABASE_ID` 是要寫入的 Notion database ID。
 
 ### 4. 設定 LINE webhook URL
 
@@ -177,6 +215,14 @@ pong
 
 如果 Bot 回覆繁體中文的讀書建議，代表 v0.2 的 OpenAI 一般聊天功能已經運作。
 
+測試 Notion 寫入：
+
+```text
+/note 今天開始整理東亞樹知識庫的第一筆筆記
+```
+
+如果 Bot 回覆 `已新增到 Notion：` 加上標題，代表 v0.3 的 Notion integration 已經運作。
+
 ## 專案結構
 
 ```text
@@ -187,11 +233,12 @@ pong
 ├── .env.example
 └── src
     ├── commands.js
+    ├── notion-notes.js
     ├── openai-agent.js
     └── index.js
 ```
 
-## 更新到 v0.2 後要執行的指令
+## 更新到 v0.3 後要執行的指令
 
 安裝套件：
 
@@ -199,10 +246,10 @@ pong
 npm install
 ```
 
-如果你想明確安裝 OpenAI 官方 SDK：
+如果你想明確安裝 Notion 官方 SDK：
 
 ```bash
-npm install openai
+npm install @notionhq/client
 ```
 
 檢查語法：
@@ -221,9 +268,9 @@ npm run dev
 
 ```bash
 git status
-git add package.json .env.example render.yaml README.md src/index.js src/commands.js src/openai-agent.js
-git commit -m "Add OpenAI chat replies for LINE bot v0.2"
-git push
+git add .
+git commit -m "Add Notion integration"
+git push origin main
 ```
 
 推上 GitHub 後，Render 會依照設定重新部署。

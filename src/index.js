@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import "dotenv/config";
 import express from "express";
 import { handleTextCommand } from "./commands.js";
+import { createNotionNote, parseNoteCommand } from "./notion-notes.js";
 import { createAiReply } from "./openai-agent.js";
 
 const app = express();
@@ -56,10 +57,23 @@ async function handleLineEvent(event) {
   if (event.message?.type !== "text") return;
   if (!event.replyToken) return;
 
-  const commandReply = handleTextCommand(event.message.text);
-  const replyText = commandReply ?? await createAiReply(event.message.text);
+  const replyText = await createReplyText(event.message.text);
 
   await replyMessage(event.replyToken, replyText);
+}
+
+async function createReplyText(text) {
+  const noteContent = parseNoteCommand(text);
+  if (noteContent !== null) {
+    return createNotionNote(noteContent);
+  }
+
+  const commandReply = handleTextCommand(text);
+  if (commandReply !== null) {
+    return commandReply;
+  }
+
+  return createAiReply(text);
 }
 
 function verifyLineSignature(bodyBuffer, signature) {

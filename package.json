@@ -1,18 +1,19 @@
 {
   "name": "line-bot-ai-agent",
-  "version": "0.2.0",
-  "description": "LINE Bot AI Agent with LINE Messaging API and OpenAI chat replies.",
+  "version": "0.3.0",
+  "description": "LINE Bot AI Agent with OpenAI chat replies and Notion notes.",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "check": "node --check src/index.js && node --check src/commands.js && node --check src/openai-agent.js"
+    "check": "node --check src/index.js && node --check src/commands.js && node --check src/openai-agent.js && node --check src/notion-notes.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@notionhq/client": "^2.2.15",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "openai": "^6.42.0"
