@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import "dotenv/config";
 import express from "express";
 import { handleTextCommand } from "./commands.js";
+import { createAiReply } from "./openai-agent.js";
 
 const app = express();
 
@@ -55,7 +56,9 @@ async function handleLineEvent(event) {
   if (event.message?.type !== "text") return;
   if (!event.replyToken) return;
 
-  const replyText = handleTextCommand(event.message.text);
+  const commandReply = handleTextCommand(event.message.text);
+  const replyText = commandReply ?? await createAiReply(event.message.text);
+
   await replyMessage(event.replyToken, replyText);
 }
 

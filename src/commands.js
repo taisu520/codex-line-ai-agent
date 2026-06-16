@@ -30,6 +30,6 @@ export function handleTextCommand(text) {
     case "/calendar 測試":
       return "Google Calendar 串接待完成";
     default:
-      return "我目前只支援文字指令。輸入 /help 查看可用指令。";
+      return null;
   }
 }

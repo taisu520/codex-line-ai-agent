@@ -1,7 +1,28 @@
 # LINE Bot AI Agent MVP
 
 這是一個最小可用版本的 LINE Bot 遠端控制台。  
-目前只處理 LINE 的文字訊息，並先保留 Notion 與 Google Calendar 的測試指令，不會真的寫入外部服務。
+目前只處理 LINE 的文字訊息。v0.2 已接上 OpenAI API：固定指令會走內建回覆，一般自然語言訊息會交給 AI 回覆。
+
+Notion 與 Google Calendar 目前仍是測試指令，不會真的寫入外部服務。
+
+## 版本狀態
+
+### v0.2
+
+- 保留 v0.1 的 LINE webhook 與固定指令。
+- 新增 OpenAI API 一般聊天功能。
+- 如果 OpenAI API 暫時失敗，會回覆：
+
+```text
+AI 回覆暫時失敗，請稍後再試。
+```
+
+### v0.1
+
+- Node.js + Express
+- LINE Messaging API webhook
+- LINE signature 驗證
+- 基礎文字指令
 
 ## 功能
 
@@ -9,7 +30,8 @@
 - 接收 LINE Messaging API webhook
 - 驗證 LINE signature
 - 只處理文字訊息
-- 使用 `.env` 管理 LINE 金鑰
+- 使用 `.env` 管理 LINE 與 OpenAI 金鑰
+- 非固定指令會送到 OpenAI API 產生回覆
 - 可部署到 Render
 
 ## 可用指令
@@ -49,8 +71,12 @@ cp .env.example .env
 ```env
 LINE_CHANNEL_SECRET=你的 LINE Channel Secret
 LINE_CHANNEL_ACCESS_TOKEN=你的 LINE Channel Access Token
+OPENAI_API_KEY=你的 OpenAI API Key
+OPENAI_MODEL=gpt-4.1-mini
 PORT=3000
 ```
+
+`OPENAI_MODEL` 可以先保留預設值。之後如果要更換模型，只要調整環境變數，不一定要改程式。
 
 4. 啟動
 
@@ -101,9 +127,11 @@ Start Command: npm start
 ```text
 LINE_CHANNEL_SECRET
 LINE_CHANNEL_ACCESS_TOKEN
+OPENAI_API_KEY
 ```
 
-值要從 LINE Developers Console 複製。
+`LINE_CHANNEL_SECRET` 和 `LINE_CHANNEL_ACCESS_TOKEN` 要從 LINE Developers Console 複製。  
+`OPENAI_API_KEY` 要從 OpenAI API keys 頁面建立並複製。
 
 ### 4. 設定 LINE webhook URL
 
@@ -141,17 +169,64 @@ pong
 
 代表 LINE 遠端控制台 MVP 已經可以運作。
 
+接著傳送一般自然語言，例如：
+
+```text
+我今天想讀英文，但是不知道怎麼開始
+```
+
+如果 Bot 回覆繁體中文的讀書建議，代表 v0.2 的 OpenAI 一般聊天功能已經運作。
+
 ## 專案結構
 
 ```text
 .
 ├── README.md
 ├── package.json
+├── render.yaml
 ├── .env.example
 └── src
     ├── commands.js
+    ├── openai-agent.js
     └── index.js
 ```
+
+## 更新到 v0.2 後要執行的指令
+
+安裝套件：
+
+```bash
+npm install
+```
+
+如果你想明確安裝 OpenAI 官方 SDK：
+
+```bash
+npm install openai
+```
+
+檢查語法：
+
+```bash
+npm run check
+```
+
+本機開發：
+
+```bash
+npm run dev
+```
+
+## Commit 與 Push
+
+```bash
+git status
+git add package.json .env.example render.yaml README.md src/index.js src/commands.js src/openai-agent.js
+git commit -m "Add OpenAI chat replies for LINE bot v0.2"
+git push
+```
+
+推上 GitHub 後，Render 會依照設定重新部署。
 
 ## 下一步
 
@@ -161,4 +236,4 @@ pong
 - Google Calendar 建立讀書行程
 - 使用者權限控管
 - 指令記錄與錯誤通知
-- AI 回覆與長期學習資料庫
+- 長期學習資料庫
