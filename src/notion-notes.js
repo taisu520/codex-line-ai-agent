@@ -1,4 +1,5 @@
 import { Client } from "@notionhq/client";
+import { classifyNote } from "./note-classifier.js";
 
 const NOTE_COMMAND = "/note";
 const NOTION_ERROR_REPLY = "Notion 寫入失敗";
@@ -37,6 +38,7 @@ export async function createNotionNote(content) {
   }
 
   const title = createTitle(content);
+  const category = await classifyNote(content);
 
   try {
     await notion.pages.create({
@@ -66,11 +68,16 @@ export async function createNotionNote(content) {
           select: {
             name: "LINE"
           }
+        },
+        Category: {
+          select: {
+            name: category
+          }
         }
       }
     });
 
-    return `已新增到 Notion：\n${title}`;
+    return `已新增到 Notion：\n分類：${category}\n標題：${title}`;
   } catch (error) {
     console.error("Notion API error:", error);
     return NOTION_ERROR_REPLY;

@@ -1,11 +1,22 @@
 # LINE Bot AI Agent MVP
 
 這是一個最小可用版本的 LINE Bot 遠端控制台。  
-目前只處理 LINE 的文字訊息。v0.3 已接上 Notion：固定指令會走內建回覆，`/note` 會寫入 Notion，一般自然語言訊息會交給 AI 回覆。
+目前只處理 LINE 的文字訊息。v0.4 已接上 Notion 筆記自動分類：固定指令會走內建回覆，`/note` 會寫入 Notion Inbox，一般自然語言訊息會交給 AI 回覆。
 
 Google Calendar 目前仍是測試指令，不會真的寫入外部服務。
 
 ## 版本狀態
+
+### v0.4
+
+- 保留 v0.3 的 Notion Inbox 寫入功能。
+- 新增 `/note` 自動分類。
+- 目前仍全部寫入同一個 `LINE AI Agent Inbox`。
+- Notion 欄位對應：
+  - `Name`：內容前 30 字
+  - `Content`：完整內容
+  - `Source`：`LINE`
+  - `Category`：AI 判斷的分類，選項為 `東亞樹`、`日文`、`其他`
 
 ### v0.3
 
@@ -42,7 +53,7 @@ AI 回覆暫時失敗，請稍後再試。
 - 只處理文字訊息
 - 使用 `.env` 管理 LINE 與 OpenAI 金鑰
 - 非固定指令會送到 OpenAI API 產生回覆
-- `/note 內容` 會寫入 Notion database
+- `/note 內容` 會寫入 Notion database，並自動寫入 `Category`
 - 可部署到 Render
 
 ## 可用指令
@@ -75,7 +86,8 @@ Notion 筆記範例：
 
 ```text
 已新增到 Notion：
-牟宗三與康德：智的直覺是在回答人是否能接近絕對價值
+分類：東亞樹
+標題：牟宗三與康德：智的直覺是在回答人是否能接近絕對價值
 ```
 
 如果 Notion 寫入失敗，會回覆：
@@ -111,6 +123,8 @@ PORT=3000
 ```
 
 `OPENAI_MODEL` 可以先保留預設值。之後如果要更換模型，只要調整環境變數，不一定要改程式。
+
+v0.4 不需要新增環境變數。分類功能會使用既有的 `OPENAI_API_KEY` 和 `OPENAI_MODEL`。
 
 4. 啟動
 
@@ -221,7 +235,39 @@ pong
 /note 今天開始整理東亞樹知識庫的第一筆筆記
 ```
 
-如果 Bot 回覆 `已新增到 Notion：` 加上標題，代表 v0.3 的 Notion integration 已經運作。
+如果 Bot 回覆 `已新增到 Notion：`、分類和標題，代表 Notion integration 已經運作。
+
+測試 v0.4 自動分類：
+
+```text
+/note 今天開始建立東亞樹知識庫
+```
+
+預期分類：
+
+```text
+東亞樹
+```
+
+```text
+/note 今天背了50個日文單字
+```
+
+預期分類：
+
+```text
+日文
+```
+
+```text
+/note 今天天氣很好
+```
+
+預期分類：
+
+```text
+其他
+```
 
 ## 專案結構
 
@@ -233,12 +279,13 @@ pong
 ├── .env.example
 └── src
     ├── commands.js
+    ├── note-classifier.js
     ├── notion-notes.js
     ├── openai-agent.js
     └── index.js
 ```
 
-## 更新到 v0.3 後要執行的指令
+## 更新到 v0.4 後要執行的指令
 
 安裝套件：
 
@@ -269,7 +316,7 @@ npm run dev
 ```bash
 git status
 git add .
-git commit -m "Add Notion integration"
+git commit -m "Add note category classification"
 git push origin main
 ```
 
